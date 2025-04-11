@@ -2,9 +2,9 @@ from hashlib import sha256
 from models import URLMap, db
 from functools import lru_cache
 from flask import abort
-import redis
+import redis,os
 # Connect to Redis server
-cache = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+cache = redis.Redis(host=os.getenv("REDIS_HOST", "redis"), port=6379, db=0, decode_responses=True)
 
 
 def short_url(url):

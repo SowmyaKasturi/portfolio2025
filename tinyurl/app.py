@@ -17,7 +17,7 @@ def shorturl():
 
 @app.route("/geturl/<slug>")
 def geturl(slug):
-    return redirect(get_url(slug))
+    return jsonify({"url":get_url(slug)})
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -35,4 +35,4 @@ def login():
 #     return jsonify({"hits": cach_in.hits, "misses": cach_in.misses})
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    app.run(host='0.0.0.0',port=5001, debug=True)
