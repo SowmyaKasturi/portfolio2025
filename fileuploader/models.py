@@ -31,7 +31,7 @@ class User(db.Model):
     userid = db.Column(db.String(128), primary_key=True)
     username=db.Column(db.String(128), nullable=False)
     role = db.Column(Enum(UserRoles), nullable=False)
-    projectid = db.Column(db.String(128), db.ForeignKey(Client.clientid))
+    projectid = db.Column(db.String(128), db.ForeignKey(Project.projectid))
 
 class LoginAuth(db.Model):
     id = db.Column(db.Integer, primary_key=True)

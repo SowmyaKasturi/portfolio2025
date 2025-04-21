@@ -2,14 +2,21 @@ from flask import Flask, request, abort, jsonify
 from models import db, LoginAuth, Client, User, File, FileStatus, UserRoles, Project
 from hashlib import sha256
 from utils.auth import *
+from utils.queries import *
 import shutil,os
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fileuploader.db'
 app.config["FILE_UPLOAD"] = "/home/asus/portfolio2025/fileuploader/files/"
 app.config["FILE_DOWNLOAD"] = "/home/asus/portfolio2025/fileuploader/files/DOWNLOAD"
 db.init_app(app)
+# next steps
+# Sure, here are the **5 points only**:
 
-
+# 1. Use a **salt** with password hashing to prevent rainbow table attacks.  
+# 2. Use `secure_filename()` to sanitize uploaded file names.  
+# 3. Validate **file type and size** before accepting uploads.  
+# 4. Store uploaded files with **unique names** (e.g., UUIDs).  
+# 5. Wrap all file operations in **try-except blocks** to handle errors safely.
 with app.app_context():
     db.create_all()  # Only create tables if they don't exist
     
@@ -67,9 +74,11 @@ def login():
     data = request.get_json()
     userid = data.get("userid")
     password = data.get("password")
-    password = password=sha256(password.encode()).hexdigest()[:8]
-    get_records = LoginAuth.query.filter_by(password=password).first()
+    password = sha256(password.encode()).hexdigest()
+    get_records = LoginAuth.query.filter_by(userid=userid).first()
     user_data = User.query.filter_by(userid=userid).first()
+    if get_records and get_records.password != password:
+        abort(400, "Unauthorized contact admin for login")
     if not get_records and user_data:
         db.session.add(LoginAuth(uname=userid, password=password))
         db.session.commit()
@@ -84,11 +93,8 @@ def add_user():
     userid=user_data["userid"]
     username=user_data["username"]
     role=user_data["role"]
-    projectid=user_data["projectid"]
-    project_id=Project.query.filter_by(projectid=projectid).first()
-    if not project_id:
-        abort(400, "Project not found")
-    db.session.add(User(userid=userid, username=username,role=role, projectid=projectid ))
+    project_data=get_project_data_or_abort(user_data["projectid"])
+    db.session.add(User(userid=userid, username=username,role=role, projectid=project_data.projectid ))
     db.session.commit()
     return "User added successfully"
 
@@ -112,13 +118,11 @@ def add_project():
     clientid=client_project_data["clientid"]
     projectid=client_project_data["projectid"]
     projectname=client_project_data["projectname"]
-    clientdata=Client.query.filter_by(clientid=clientid).first()
-    if not clientdata:
-        abort(400, "Client not exists")
+    clientdata=get_client_data_or_abort()
     project_id=Project.query.filter_by(projectid =projectid).first()
     if project_id:
         abort(400, "Client and Project already exists")
-    db.session.add(Project(projectid=projectid, projectname=projectname, clientid=clientid))
+    db.session.add(Project(projectid=projectid, projectname=projectname, clientid=client_data.clientid))
     db.session.commit()
     return "Project added successfully"
 
@@ -134,16 +138,12 @@ def upload():
     poc=data.form.get("poc")
     if status not in [_.value  for _ in FileStatus]:
         abort(400, "Not a valid status")
-    project_ids = Project.query.filter_by(projectid=project_id).first()
-    if not project_ids:
-        abort(400, "Project does not exist")
-    userids = User.query.filter_by(userid=poc).first()
-    if not userids:
-        abort(400, "User does not exist")
+    project_ids = get_project_data_or_abort(project_id)
+    userids = get_user_data_or_abort(poc)
     file_info = File(filename =file.filename,
     status = status,
-    projectid = project_id,
-    poc=poc)
+    projectid = project_ids.projectid,
+    poc=userids.userid)
     file.save(app.config["FILE_UPLOAD"]+file.filename)
     db.session.add(file_info)
     db.session.commit()
@@ -156,13 +156,9 @@ def delete():
     data=request.get_json()
     project_id = data.get("projectid")
     userid=data.get("userid")
-    project_ids = Project.query.filter_by(projectid=project_id).first()
-    if not project_ids:
-        abort(400, "Project does not exist")
-    userids = User.query.filter_by(userid=userid).first()
-    if not userids:
-        abort(400, "User does not exist")
-    if userids.projectid != project_id:
+    project_ids = get_project_data_or_abort(project_id)
+    userids = get_user_data_or_abort(userid)
+    if userids.projectid != project_ids.projectid:
         abort(400, "User cannot delete as they are not assigned to the project")
     file_info = File.query.filter_by(projectid=project_ids.projectid).first()
     if not file_info:
@@ -185,15 +181,11 @@ def download():
     data=request.get_json()
     project_id = data.get("projectid")
     userid=data.get("userid")
-    project_ids = Project.query.filter_by(projectid=project_id).first()
-    if not project_ids:
-        abort(400, "Project does not exist")
-    userids = User.query.filter_by(userid=userid).first()
-    if not userids:
-        abort(400, "User does not exist")
+    project_ids = get_project_data_or_abort(project_id)
+    userids = get_user_data_or_abort(userid)
     file_info = File.query.all()
     for i in file_info:
-        if i.projectid == project_id and i.poc == userid and i.status != "Deleted":
+        if i.projectid == project_ids.projectid and i.poc == userids.userid and i.status != "Deleted":
             shutil.copy(app.config["FILE_UPLOAD"]+"/"+i.filename,app.config["FILE_DOWNLOAD"]+"/")
     return "File downloaded"
 
