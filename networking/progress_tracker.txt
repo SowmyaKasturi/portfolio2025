@@ -1,0 +1,64 @@
+What is a Network? LAN, WAN, MAN, Internet Basics
+-Network is connecting two or more computers to share resources ,printers etc.
+LAN - home office networks,reliable and fast.
+WAN - wide area network spanning universities and less speed and less reliable.
+MAN - metro politan area network spanning large cities ,countries provided by ISPs less speed and less reliable.
+
+OSI Model - Overview of 7 Layers (Purpose + Example)
+A-Application
+P-presentation
+S-Session
+T-Transport
+N-Network
+D-Datalink
+P-Physical
+From google i send data in english to a server creating a session then packets are sent over the network and data is received by the server.
+
+TCP/IP Model - Mapping to OSI, Real-world analogy
+Application
+Transport
+Network
+Physical
+
+IP Addressing (IPv4, IPv6, Public vs Private IP):
+
+IPV4 can accomodate 2^64 addresses
+IPV6 can accomodate 2^256 addresses
+Public - exposed to the internet
+Private - within the subnet
+
+Subnetting Basics - CIDR notation, calculating subnets
+Subnetting is dividing the ip range into parts which helps in maintinaing better security and managing.
+CIDR notation - classless intradomain routing
+Calculating:
+lets say we have a ip address 192.168.1.0/24 it means that 8 bits are available for representing the ip .
+Out of 8 bits if we need to divide the ips into 4 groups we would need 2 bits to represent the groups so the ip range available becomes 
+192.168.1.0/26
+
+so we have 6 bits for ip range 2^6 ie 64 addresses in each range 62+2 ie 2 address in each block for broadcast and network so
+62*4+2*4=248+8 = 256 addresses
+
+192.168.1.1-192.168.1.63 - subnet1
+192.168.1.64-192.168.1.127 - subnet2
+192.168.1.128-192.168.1.191 - subnet3
+192.168.1.192-192.168.1.255 - subnet4
+
+Lets how to know where to route the data we have subnet mask for that the subnet mask would be something like 255.255.255.X which would give the subnet id when ANDed with ip
+
+NAT, DHCP - How devices get IP, routing with NAT
+NAT - network address translation
+DHCP - dynamic host configuration
+NAT deals with communicating with outside world and routing the packets to the internal subnets .There will route table
+ ip| source port number| public ip port |number based on this the packets will routed to internal subnet ips.
+the ip wont be permanent the ip will assigned dynamically as they are availble this makes it easier to handle as there wont be as set ip for system.
+
+DNS - How URLs become IP addresses, Domain structure
+DNS domain name service
+for each website name there would be ip which will be resolved by the toplevel domain service then the eventual authorities which maintian the ip for all the webistes.
+
+TCP vs UDP - What they are, when to use
+TCP is 3 way handshake reliable protocol which allows retries.
+TCP is used for mails,dbs where the request and response order is important.
+
+UDP is stateless and not relaiable but useful in video steaming .
+
