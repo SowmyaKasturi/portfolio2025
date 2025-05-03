@@ -9,14 +9,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fileuploader.db'
 app.config["FILE_UPLOAD"] = "/home/asus/portfolio2025/fileuploader/files/"
 app.config["FILE_DOWNLOAD"] = "/home/asus/portfolio2025/fileuploader/files/DOWNLOAD"
 db.init_app(app)
-# next steps
-# Sure, here are the **5 points only**:
 
 # 1. Use a **salt** with password hashing to prevent rainbow table attacks.  
 # 2. Use `secure_filename()` to sanitize uploaded file names.  
 # 3. Validate **file type and size** before accepting uploads.  
 # 4. Store uploaded files with **unique names** (e.g., UUIDs).  
 # 5. Wrap all file operations in **try-except blocks** to handle errors safely.
+
 with app.app_context():
     db.create_all()  # Only create tables if they don't exist
     
