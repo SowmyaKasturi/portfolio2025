@@ -69,7 +69,7 @@ class LRUCache:
             if key in self.cache:
                 node = self.cache[key]
                 value = node.value
-                key = self.dll.remove(node)
+                self.dll.remove(node)
                 self.cache[key] = self.dll.add(key, value)
                 return value
             return "Key not found"
@@ -77,6 +77,8 @@ class LRUCache:
     def put(self, key, value):
         with self.lock:
             if key in self.cache:
+                if self.cache[key].value == value:
+                    return
                 node = self.cache[key]
                 del_key = self.dll.remove(node)
                 del self.cache[del_key]
@@ -106,19 +108,18 @@ def worker():
             if not urls:
                 break
             url = urls.pop()
-            try:
-                if url in cache.cache:
-                    print(cache.cache)
-                    print("fetching from cache")
-                    return cache.get(url)
-                
-                response = requests.get(url, timeout=5)
-                if url not in cache.cache:
-                    cache.put(key=url,value=response.content[:25])
-            except Exception as e:
-                print(f"error {url}")
-            finally:
-                print("Complete")
+        try:
+            if url in cache.cache:
+                print("fetching from cache")
+                cache.get(url)
+                continue
+            
+            response = requests.get(url, timeout=5)
+            cache.put(key=url,value=response.content[:25])
+        except Exception as e:
+            print(f"error {url}")
+        finally:
+            print("Complete")
 # worker()
 threads = []
 start = time.time()
@@ -130,8 +131,5 @@ for _ in range(3):
 
 
 for i in threads:
-    thread.join()
-# 0.554011344909668
-# worker()
-# 2.543705940246582
+    i.join()
 print(time.time()-start)
